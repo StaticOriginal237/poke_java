@@ -1,0 +1,27 @@
+- hosts: web
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Ensure Docker is running
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Pull Docker image
+      docker_image:
+        name: demo-app
+        source: build
+        build:
+          path: .
+
+    - name: Run Docker container
+      docker_container:
+        name: demo-app
+        image: demo-app
+        state: started
+        ports:
+          - "8080:8080"

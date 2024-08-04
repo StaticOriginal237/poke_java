@@ -1,0 +1,29 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    dockerImage = docker.build("demo-app")
+                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-credentials') {
+                        dockerImage.push("${env.BUILD_NUMBER}")
+                        dockerImage.push("latest")
+                    }
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sshagent(['ansible-ssh-key']) {
+                    sh 'ansible-playbook -i inventory playbook.yml'
+                }
+            }
+        }
+    }
+}
